@@ -1,0 +1,139 @@
+---
+title: "EDA"
+author: "Fatimah Niyas"
+date: "2025-04-15"
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exploratory Data Analysis
+
+### Loading necessary libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(maps)
+library(dplyr)
+```
+
+### Loading in cleaned meteorite landings dataset
+
+```{r}
+setwd("~/DATA 205/data")
+meteorite1 <- read.csv('meteorite1_cleaned.csv')
+```
+
+### Visualization on meteorite count over years
+
+This visualization can help answer the questions:
+
+Have meteorite landing findings increased over time?
+What factors may have caused this?
+Has improved technology led to more accurate detection and reporting?
+
+```{r}
+ggplot(meteorite1, aes(x = year)) + # visualizing meteorite count over years
+  geom_histogram(binwidth = 10, fill = "darkblue", color = "white") +
+  labs(title = "Number of Meteorites Recorded(1850-2013)",
+       x = "Year", y = "Count") +
+  theme_minimal()
+```
+
+As we can see here, the data is skewed left, clustered in more recent years likely because of advancements in technology, increased global scientific interest, and improved tracking and reporting systems.
+In the past, many meteorite events may have gone unnoticed or undocumented, especially in remote or less-populated areas.
+As scientific tools have developed, more meteorite landings have been detected, recorded, and analyzed—leading to a sharp increase in entries during the 20th and 21st centuries.
+
+### Visualization on meteorite mass over years
+
+
+```{r}
+mass_by_year <- meteorite1 %>%
+  group_by(year) %>%
+  summarize(avg_mass = mean(mass, na.rm = TRUE)) %>%
+  arrange(year)
+
+# Time series plot with a smoothed trend line
+ggplot(mass_by_year, aes(x = year, y = avg_mass)) +
+  geom_line(color = "steelblue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Average Meteorite Mass by Year (1851–2013)",
+       x = "Year", y = "Average Mass (g)") +
+  theme_minimal()
+```
+
+
+These visualizations can help answer the questions: Has improved technology led to more accurate detection and reporting?
+Is there a relationship between meteorite mass and the year it was found?
+Do technological improvements make smaller meteorites easier to detect now?
+
+Boxplot:
+
+```{r}
+mass_year <- meteorite1 |>
+  filter(mass < 10000) # adjusting to visualize better
+mass_year$decade <- floor(as.numeric(mass_year$year) / 10) * 10  # turning year into decade
+
+# creating new column to mark the change
+mass_year <- mass_year %>%
+  mutate(period = case_when(
+    decade < 1970 ~ "Before 1970",
+    decade >= 1970 ~ "After 1970"
+  ))
+
+ggplot(mass_year, aes(x = factor(decade), y = mass, fill = period)) +
+  geom_boxplot(outlier.shape = NA) +
+  scale_y_log10() +
+  scale_fill_manual(values = c("Before 1970" = "darkolivegreen", "After 1970" = "lightblue")) +
+  labs(title = "Distribution of Meteorite Mass by Decade",
+       x = "Decade", y = "Mass (log scale)", fill = "Period") +
+  theme_minimal()
+```
+
+Here, we can see that in more recent years, the number of meteorites with smaller masses has increased also due to advancements in detection technology and improved reporting systems.
+Smaller meteorites that would have gone unnoticed in the past are now being recovered thanks to tools like metal detectors, satellite tracking, etc.
+
+### Meteorite locations on a map
+
+This visualization can help answer the questions: What locations have a higher amount of meteorite findings?
+Are meteorite discoveries clustered in specific countries or regions?
+Are specific countries reporting more meteorite landings due to better detection technology?
+
+```{r}
+world_map <- map_data("world")
+
+ggplot() +
+  geom_map(data = world_map, map = world_map,
+           aes(x = long, y = lat, map_id = region),
+           fill = "lightgray", color = "white", size = 0.2) +
+  geom_point(data = meteorite1,
+             aes(x = reclong, y = reclat),
+             color = "darkblue", alpha = 0.5, size = 1) +
+  labs(title = "Meteorite Landings (After 1850s)",
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()
+```
+
+### Meteorite locations on a map colored by 'Fell' vs. 'Found'
+
+```{r}
+ggplot() +
+  geom_map(data = world_map, map = world_map,
+           aes(x = long, y = lat, map_id = region),
+           fill = "lightgray", color = "white", size = 0.2) +
+  geom_point(data = meteorite1,
+             aes(x = reclong, y = reclat, color = fall),
+             alpha = 0.6, size = 1) +
+  scale_color_manual(values = c("Fell" = "red", "Found" = "blue")) +
+  labs(title = "Meteorite Landings (After 1850s)",
+       x = "Longitude", y = "Latitude", color = "Fall Status") +
+  theme_minimal()
+```

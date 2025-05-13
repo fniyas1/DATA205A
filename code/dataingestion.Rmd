@@ -1,0 +1,99 @@
+---
+title: "Data Ingestion/EDA"
+author: "Fatimah Niyas"
+date: "2025-04-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Ingestion/Cleaning and EDA
+
+### Loading in necessary libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(maps)
+library(dplyr)
+```
+
+### Loading in meteorite landings data
+
+```{r}
+setwd("~/DATA 205/data")
+meteorite <- read.csv('Meteorite_Landings.csv')
+```
+
+## Begin cleaning data
+
+```{r}
+meteorite1 <- meteorite |>
+  filter(!is.na(mass..g.)) |> # filter out any NAs
+  filter(!is.na(year)) |>
+  filter(!is.na(reclat)) |>
+  filter(!is.na(reclong)) |>
+  rename(mass = mass..g.)|> # renaming for easier access
+  filter(year > 1850 & year < 2100) |> # filter the years to avoid big outliers
+  filter(reclat >= -90 & reclat <= 90, reclong >= -180 & reclong <= 180) |> # make sure the coordinates are valid
+  filter(mass > 0 & mass < 1e6) #filter out mass values
+head(meteorite1)
+
+# save cleaned data
+write.csv(meteorite1, "meteorite1_cleaned.csv", row.names = FALSE)
+```
+
+### Summary statistics of cleaned data
+
+```{r}
+summary(meteorite1)
+```
+
+## Begin Exploratory Data Analysis
+
+### Visualization on meteorite count over years
+
+```{r}
+ggplot(meteorite1, aes(x = year)) + # visualizing meteorite count over years
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "white") +
+  labs(title = "Number of Meteorites Recorded(1850-2013)",
+       x = "Year", y = "Count") +
+  theme_minimal()
+```
+
+As we can see here, the data is skewed left, clustered in more recent years likely because of advancements in technology, increased global scientific interest, and improved tracking and reporting systems. In the past, many meteorite events may have gone unnoticed or undocumented, especially in remote or less-populated areas. As scientific tools have developed, more meteorite landings have been detected, recorded, and analyzed—leading to a sharp increase in entries during the 20th and 21st centuries.
+
+### Visualization on meteorite mass over years
+
+```{r}
+ggplot(meteorite1, aes(x = year, y = mass)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  scale_y_log10() +  
+  labs(title = "Meteorite Mass Over Time",
+       x = "Year",
+       y = "Mass (grams)") +
+  theme_minimal()
+```
+
+Here, we can see that in more recent years, the number of meteorites with smaller masses has increased also due to advancements in detection technology and improved reporting systems. Smaller meteorites that would have gone unnoticed in the past are now being recovered thanks to tools like metal detectors, satellite tracking, etc.
+
+### Meteorite locations on a map
+
+```{r}
+world_map <- map_data("world")
+
+ggplot() +
+  geom_map(data = world_map, map = world_map,
+           aes(x = long, y = lat, map_id = region),
+           fill = "lightgray", color = "white", size = 0.2) +
+  geom_point(data = meteorite1,
+             aes(x = reclong, y = reclat),
+             color = "darkblue", alpha = 0.5, size = 1) +
+  labs(title = "Meteorite Landings (After 1850s)",
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()
+```
+
+
