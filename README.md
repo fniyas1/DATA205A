@@ -14,9 +14,9 @@ This project analyzes global meteorite landings using data from Data.gov and Our
 
 - [`data/`](data/): Contains the cleaned datasets used for analysis.
 - [`code/`](code/): R Markdown files for data cleaning, exploratory analysis, and final analysis.
-- [`dashboard/`](dashboard/): Link to interactive dashboards
-- [`final report/`](finalreport/): PDF of the final written report.
-- [`final presentation/`](finalpresentation/): Final presentation slides
+- [`dashboard/`](dashboards/): Link to interactive dashboards
+- [`final report/`](final report/): PDF of the final written report.
+- [`final presentation/`](final presentation/): Final presentation slides
 
 ## Dashboard
 - Population Density vs. Meteorite Landings: https://public.tableau.com/views/PopulationDensityvsMeteoriteLandings/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
